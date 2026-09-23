@@ -40,13 +40,14 @@ final class MeetingPanel {
 
     /// Updates whenever the prompt or recording state changes. Window work stays outside the tracking.
     private func track() {
-        withObservationTracking { _ = shouldShow } onChange: { [weak self] in
+        withObservationTracking { _ = (recorder.state, shouldShow) } onChange: { [weak self] in
             Task { @MainActor in self?.track() }
         }
         update()
     }
 
     private func update() {
+        if recorder.state != .idle { meeting.dismiss() }  // Recording started from the menu instead.
         shouldShow ? show() : panel.orderOut(nil)
     }
 

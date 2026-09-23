@@ -102,4 +102,21 @@ struct MeetingPanelTests {
             #expect(await eventually { !panel.isVisible })
         }
     }
+
+    @Test func recordingFromTheMenuReplacesThePrompt() async throws {
+        _ = NSApplication.shared
+        UserDefaults.standard.register(defaults: [Pref.meetingPrompt: true])
+        try await withTempFolder { folder in
+            let recorder = Recorder(store: NoteStore(folder: folder)) { [] }
+            let meeting = MeetingController(recorder: recorder)
+            let panel = MeetingPanel(meeting: meeting, recorder: recorder)
+            meeting.meetingChanged("Zoom")
+            #expect(await eventually { panel.isVisible })
+
+            await recorder.start()
+            #expect(await eventually { meeting.prompt == nil })
+            await recorder.stop()
+            #expect(await eventually { !panel.isVisible })
+        }
+    }
 }
