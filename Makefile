@@ -28,7 +28,7 @@ run: app
 	open $(APP)
 
 test:
-	swift test $(TESTFLAGS)
+	swift test $(TESTFLAGS) $(if $(FILTER),--filter $(FILTER))
 
 install: app
 	rm -rf /Applications/Terry.app
