@@ -5,7 +5,9 @@ import Speech
 /// `append` is called from the source's audio thread; everything else from the main actor.
 final class LiveTranscriber: @unchecked Sendable {
     let speaker: Speaker
-    private let origin: TimeInterval
+    /// Host time (seconds) the recording started. Result times are relative to it, which keeps
+    /// separate sources on one timeline. Set before audio starts flowing.
+    var origin: TimeInterval = 0
     private var analyzer: SpeechAnalyzer?
     private var input: AsyncStream<AnalyzerInput>.Continuation?
     private var format: AVAudioFormat?
@@ -13,11 +15,8 @@ final class LiveTranscriber: @unchecked Sendable {
     private var position: TimeInterval = 0
     private var results: Task<Void, Error>?
 
-    /// `origin` is the host time (seconds) the recording started; result times are relative to it,
-    /// which keeps separate sources on one timeline.
-    init(speaker: Speaker, origin: TimeInterval) {
+    init(speaker: Speaker) {
         self.speaker = speaker
-        self.origin = origin
     }
 
     func start(locale: Locale, onResult: @escaping @MainActor (Segment, _ isFinal: Bool) -> Void) async throws {

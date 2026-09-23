@@ -40,8 +40,9 @@ struct LiveTranscriberTests {
 
         var transcript = Transcript()
         let origin: TimeInterval = 1_000
-        let transcriber = LiveTranscriber(speaker: .me, origin: origin)
+        let transcriber = LiveTranscriber(speaker: .me)
         try await transcriber.start(locale: locale) { transcript.apply($0, isFinal: $1) }
+        transcriber.origin = origin
         try feed(first, to: transcriber, from: origin)
         try feed(second, to: transcriber, from: origin + firstDuration + 5)  // 5 s gap, e.g. a device switch
         await transcriber.finish()

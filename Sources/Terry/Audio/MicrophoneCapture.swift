@@ -3,8 +3,14 @@ import AVFoundation
 /// Something that produces live audio. Buffers arrive on a background thread and are only
 /// valid for the duration of the callback; `hostTime` is when the first frame was captured.
 protocol AudioSource: AnyObject {
+    /// Called before `start`, e.g. to ask for permission.
+    func prepare() async throws
     func start(_ onBuffer: @escaping (_ buffer: AVAudioPCMBuffer, _ hostTime: TimeInterval?) -> Void) throws
     func stop()
+}
+
+extension AudioSource {
+    func prepare() async throws {}
 }
 
 /// The default input device, via AVAudioEngine. Survives device switches (e.g. AirPods connecting).
@@ -12,6 +18,10 @@ final class MicrophoneCapture: AudioSource {
     private let engine = AVAudioEngine()
     private var onBuffer: ((AVAudioPCMBuffer, TimeInterval?) -> Void)?
     private var observer: NSObjectProtocol?
+
+    func prepare() async throws {
+        guard await AVAudioApplication.requestRecordPermission() else { throw TerryError.microphoneDenied }
+    }
 
     func start(_ onBuffer: @escaping (AVAudioPCMBuffer, TimeInterval?) -> Void) throws {
         self.onBuffer = onBuffer
