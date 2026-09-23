@@ -28,7 +28,7 @@ run: app
 	open $(APP)
 
 test:
-	swift test $(TESTFLAGS) $(if $(FILTER),--filter $(FILTER))
+	swift test $(TESTFLAGS) $(if $(FILTER),--filter '$(FILTER)')
 
 icon:
 	swift scripts/make-icon.swift
