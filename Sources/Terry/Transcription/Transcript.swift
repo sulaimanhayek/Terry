@@ -14,9 +14,10 @@ struct Segment: Equatable, Sendable {
 }
 
 /// A display/save unit: consecutive segments from one speaker. `pending` holds not-yet-final text.
+/// `start` is nil for text without a timestamp (e.g. typed into a saved note by hand).
 struct Paragraph: Equatable {
     var speaker: String?
-    var start: TimeInterval
+    var start: TimeInterval?
     var text: String
     var pending = ""
 }
@@ -52,7 +53,7 @@ struct Transcript {
         var last: Segment?
         for (segment, isPending) in items {
             if let last, let paragraph = result.last, last.speaker == segment.speaker,
-               segment.start - last.end < 3, segment.start - paragraph.start < 60 {
+               segment.start - last.end < 3, segment.start - (paragraph.start ?? 0) < 60 {
                 if isPending {
                     result[result.count - 1].pending = segment.text
                 } else {

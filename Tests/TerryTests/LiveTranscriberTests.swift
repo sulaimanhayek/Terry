@@ -16,14 +16,14 @@ func spokenAudio(_ text: String, voice: String = "Samantha") throws -> AVAudioFi
 }
 
 /// Feeds a file in 100 ms buffers, stamping each with a host time as a live source would.
-func feed(_ file: AVAudioFile, to transcriber: LiveTranscriber, from hostTime: TimeInterval) throws {
+func feed(_ file: AVAudioFile, from hostTime: TimeInterval, to onBuffer: (AVAudioPCMBuffer, TimeInterval?) -> Void) throws {
     let format = file.processingFormat
     let chunk = AVAudioFrameCount(format.sampleRate / 10)
     while file.framePosition < file.length {
         let time = hostTime + Double(file.framePosition) / format.sampleRate
         let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: chunk)!
         try file.read(into: buffer, frameCount: chunk)
-        transcriber.append(buffer, hostTime: time)
+        onBuffer(buffer, time)
     }
 }
 
@@ -43,8 +43,8 @@ struct LiveTranscriberTests {
         let transcriber = LiveTranscriber(speaker: .me)
         try await transcriber.start(locale: locale) { transcript.apply($0, isFinal: $1) }
         transcriber.origin = origin
-        try feed(first, to: transcriber, from: origin)
-        try feed(second, to: transcriber, from: origin + firstDuration + 5)  // 5 s gap, e.g. a device switch
+        try feed(first, from: origin) { transcriber.append($0, hostTime: $1) }
+        try feed(second, from: origin + firstDuration + 5) { transcriber.append($0, hostTime: $1) }  // 5 s gap, e.g. a device switch
         await transcriber.finish()
 
         let text = transcript.segments.map(\.text).joined(separator: " ").lowercased()
