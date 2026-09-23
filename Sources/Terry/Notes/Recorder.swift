@@ -32,6 +32,10 @@ final class Recorder {
 
     var isRecording: Bool { state == .recording }
 
+    func toggle() {
+        Task { state == .idle ? await start() : await stop() }
+    }
+
     func start(app: String? = nil) async {
         guard state == .idle else { return }
         state = .starting

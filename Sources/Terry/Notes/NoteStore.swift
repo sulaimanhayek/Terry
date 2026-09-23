@@ -5,6 +5,7 @@ struct Note: Identifiable, Hashable {
     var title: String
     var date: Date
     var preview: String
+    var modified: Date
     var id: URL { url }
 }
 
@@ -14,8 +15,8 @@ struct Note: Identifiable, Hashable {
 final class NoteStore {
     private(set) var folder: URL
     private(set) var notes: [Note] = []
-    private var cache: [URL: (modified: Date, note: Note, text: String)] = [:]
-    private var watcher: DispatchSourceFileSystemObject?
+    @ObservationIgnored private var cache: [URL: (modified: Date, note: Note, text: String)] = [:]
+    @ObservationIgnored private var watcher: DispatchSourceFileSystemObject?
 
     static var defaultFolder: URL { .documentsDirectory.appending(path: "Terry", directoryHint: .isDirectory) }
 
@@ -52,7 +53,7 @@ final class NoteStore {
                 let date = Self.date(fromFilename: url) ?? values?.creationDate ?? modified
                 let preview = String(paragraphs.first?.text.prefix(120) ?? "")
                 fresh[url] = (modified, Note(url: url, title: title ?? url.deletingPathExtension().lastPathComponent,
-                                             date: date, preview: preview), text)
+                                             date: date, preview: preview, modified: modified), text)
             }
         }
         cache = fresh

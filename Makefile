@@ -11,7 +11,7 @@ TESTFLAGS := -Xswiftc -F -Xswiftc $(DEV)/Library/Developer/Frameworks \
 	-Xlinker -rpath -Xlinker $(DEV)/Library/Developer/usr/lib
 endif
 
-.PHONY: build app run test install clean
+.PHONY: build app run test icon install clean
 
 build:
 	swift build -c release
@@ -29,6 +29,9 @@ run: app
 
 test:
 	swift test $(TESTFLAGS) $(if $(FILTER),--filter $(FILTER))
+
+icon:
+	swift scripts/make-icon.swift
 
 install: app
 	rm -rf /Applications/Terry.app
