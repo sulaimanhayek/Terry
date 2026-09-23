@@ -5,14 +5,21 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = NoteStore()
     lazy var recorder = Recorder(store: store)
+    private lazy var meeting = MeetingController(recorder: recorder)
+    private let detector = MeetingDetector()
+    private var panel: MeetingPanel?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         Pref.registerDefaults()
         Self.applyAppearance()
     }
 
-    /// When opened at login, stay in the menu bar instead of showing the window.
     func applicationDidFinishLaunching(_ notification: Notification) {
+        panel = MeetingPanel(meeting: meeting, recorder: recorder)
+        detector.onChange = { [meeting] in meeting.meetingChanged($0) }
+        detector.start()
+
+        // When opened at login, stay in the menu bar instead of showing the window.
         let event = NSAppleEventManager.shared().currentAppleEvent
         guard event?.eventID == kAEOpenApplication,
               event?.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem else { return }
