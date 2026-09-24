@@ -142,7 +142,9 @@ struct MeetingBanner: View {
         .padding(.trailing, 8)
         .padding(.vertical, 8)
         .glassEffect(.regular, in: .capsule)
+        .contentShape(.capsule)
         .gesture(WindowDragGesture())
+        .allowsWindowActivationEvents(true)  // the panel is never active, so every click would otherwise be ignored
         .padding(12)
         .fixedSize()
     }
