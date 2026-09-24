@@ -85,6 +85,7 @@ struct MeetingPanelTests {
         _ = NSApplication.shared
         UserDefaults.standard.register(defaults: [Pref.meetingPrompt: true])
         UserDefaults.standard.removeObject(forKey: Pref.pillPosition)
+        UserDefaults.standard.removeObject(forKey: Pref.showPill)
     }
 
     @Test func showsThePromptThenARecordingPill() async throws {
@@ -140,6 +141,25 @@ struct MeetingPanelTests {
             UserDefaults.standard.set(NSStringFromPoint(NSPoint(x: screen.minX + 5, y: -5000)), forKey: Pref.pillPosition)
             meeting.meetingChanged("Zoom")
             #expect(await eventually { panel.frame.minX == screen.minX && panel.frame.minY == screen.minY })
+        }
+    }
+
+    @Test func canStayOnScreen() async throws {
+        try await withTempFolder { folder in
+            let recorder = Recorder(store: NoteStore(folder: folder)) { [] }
+            let panel = MeetingPanel(meeting: MeetingController(recorder: recorder), recorder: recorder)
+            #expect(!panel.isVisible)
+
+            UserDefaults.standard.set(true, forKey: Pref.showPill)
+            #expect(await eventually { panel.isVisible })
+            await recorder.start()
+            #expect(await eventually { recorder.isRecording && panel.isVisible })
+            await recorder.stop()
+            try await Task.sleep(for: .milliseconds(300))
+            #expect(panel.isVisible)
+
+            UserDefaults.standard.set(false, forKey: Pref.showPill)
+            #expect(await eventually { !panel.isVisible })
         }
     }
 }

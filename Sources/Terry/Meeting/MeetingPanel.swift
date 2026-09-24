@@ -2,14 +2,16 @@ import AppKit
 import SwiftUI
 
 /// A small floating pill: it offers to transcribe when a meeting starts, then shows a timer and a stop
-/// button while recording (unless Terry is in front). It never activates Terry, so the meeting app
-/// keeps focus. It starts in the top-right corner and stays wherever it's dragged.
+/// button while recording (unless Terry is in front). It can also stay on screen with a Transcribe button.
+/// It never activates Terry, so the meeting app keeps focus. It starts in the top-right corner and stays
+/// wherever it's dragged.
 @MainActor
 final class MeetingPanel {
     private let meeting: MeetingController
     private let recorder: Recorder
     private let panel = NSPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
     private let host: NSHostingView<MeetingBanner>
+    private var pinned: NSKeyValueObservation?
 
     init(meeting: MeetingController, recorder: Recorder) {
         self.meeting = meeting
@@ -32,6 +34,9 @@ final class MeetingPanel {
         NotificationCenter.default.addObserver(forName: NSWindow.didMoveNotification, object: panel, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.savePosition() }
         }
+        pinned = UserDefaults.standard.observe(\.showPill) { [weak self] _, _ in
+            Task { @MainActor in self?.update() }
+        }
         track()
     }
 
@@ -39,7 +44,8 @@ final class MeetingPanel {
     var frame: NSRect { panel.frame }
 
     private var shouldShow: Bool {
-        meeting.prompt != nil || (!NSApp.isActive && (recorder.state != .idle || recorder.error != nil))
+        meeting.prompt != nil || UserDefaults.standard.showPill
+            || (!NSApp.isActive && (recorder.state != .idle || recorder.error != nil))
     }
 
     /// Updates whenever the prompt or recording state changes. Window work stays outside the tracking.
@@ -90,6 +96,7 @@ struct MeetingBanner: View {
     let meeting: MeetingController
     let recorder: Recorder
     @Environment(\.openWindow) private var openWindow
+    @AppStorage(Pref.showPill) private var showPill = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -111,10 +118,7 @@ struct MeetingBanner: View {
                     }
                 }
                 .contentShape(.rect)
-                .onTapGesture {
-                    NSApp.activate()
-                    openWindow(id: "main")
-                }
+                .onTapGesture(perform: openTerry)
                 .help("Show the transcript")
                 if recorder.state == .recording {
                     Button("Stop", systemImage: "stop.circle.fill", action: recorder.toggle)
@@ -126,6 +130,12 @@ struct MeetingBanner: View {
                 } else {
                     ProgressView().controlSize(.small)
                 }
+            } else if showPill {
+                Image(systemName: "waveform").foregroundStyle(.tint)
+                    .onTapGesture(perform: openTerry)
+                    .help("Open Terry")
+                Button("Transcribe", action: recorder.toggle).buttonStyle(.glassProminent)
+                CloseButton { showPill = false }.help("Hide the pill")
             }
         }
         .padding(.leading, 14)
@@ -135,6 +145,11 @@ struct MeetingBanner: View {
         .gesture(WindowDragGesture())
         .padding(12)
         .fixedSize()
+    }
+
+    private func openTerry() {
+        NSApp.activate()
+        openWindow(id: "main")
     }
 }
 
@@ -147,4 +162,9 @@ private struct CloseButton: View {
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
     }
+}
+
+extension UserDefaults {
+    /// Named like its key, so it can be observed with KVO.
+    @objc dynamic var showPill: Bool { bool(forKey: Pref.showPill) }
 }
