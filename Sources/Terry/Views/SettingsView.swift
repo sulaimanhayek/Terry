@@ -7,6 +7,7 @@ struct SettingsView: View {
     @AppStorage(Pref.systemAudio) private var systemAudio = true
     @AppStorage(Pref.meetingPrompt) private var meetingPrompt = true
     @AppStorage(Pref.appearance) private var appearance = "system"
+    @AppStorage(Pref.showPill) private var showPill = false
     @State private var languages: [Locale] = []
     @State private var openAtLogin = SMAppService.mainApp.status == .enabled
 
@@ -45,6 +46,7 @@ struct SettingsView: View {
                     Text("Light").tag("light")
                     Text("Dark").tag("dark")
                 }
+                Toggle("Keep the floating pill on screen", isOn: $showPill)
                 Toggle("Open at login", isOn: $openAtLogin)
             }
         }
