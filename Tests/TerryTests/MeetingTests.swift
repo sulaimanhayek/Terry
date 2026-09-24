@@ -79,11 +79,15 @@ struct MeetingControllerTests {
     }
 }
 
-@Suite @MainActor
+@Suite(.serialized) @MainActor
 struct MeetingPanelTests {
-    @Test func showsThePromptThenARecordingPill() async throws {
+    init() {
         _ = NSApplication.shared
         UserDefaults.standard.register(defaults: [Pref.meetingPrompt: true])
+        UserDefaults.standard.removeObject(forKey: Pref.pillPosition)
+    }
+
+    @Test func showsThePromptThenARecordingPill() async throws {
         try await withTempFolder { folder in
             let recorder = Recorder(store: NoteStore(folder: folder)) { [] }
             let meeting = MeetingController(recorder: recorder)
@@ -98,14 +102,13 @@ struct MeetingPanelTests {
 
             meeting.accept()
             #expect(await eventually { recorder.isRecording && panel.isVisible && panel.frame.width < promptWidth })
+            #expect(panel.frame.maxX == screen.maxX && panel.frame.maxY == screen.maxY)
             await recorder.stop()
             #expect(await eventually { !panel.isVisible })
         }
     }
 
     @Test func recordingFromTheMenuReplacesThePrompt() async throws {
-        _ = NSApplication.shared
-        UserDefaults.standard.register(defaults: [Pref.meetingPrompt: true])
         try await withTempFolder { folder in
             let recorder = Recorder(store: NoteStore(folder: folder)) { [] }
             let meeting = MeetingController(recorder: recorder)
@@ -117,6 +120,26 @@ struct MeetingPanelTests {
             #expect(await eventually { meeting.prompt == nil })
             await recorder.stop()
             #expect(await eventually { !panel.isVisible })
+        }
+    }
+
+    @Test func staysWhereItWasDraggedButOnScreen() async throws {
+        let screen = try #require(NSScreen.main ?? NSScreen.screens.first).visibleFrame
+        try await withTempFolder { folder in
+            let recorder = Recorder(store: NoteStore(folder: folder)) { [] }
+            let meeting = MeetingController(recorder: recorder)
+            let panel = MeetingPanel(meeting: meeting, recorder: recorder)
+
+            UserDefaults.standard.set(NSStringFromPoint(NSPoint(x: screen.midX, y: screen.midY)), forKey: Pref.pillPosition)
+            meeting.meetingChanged("Zoom")
+            #expect(await eventually { panel.isVisible })
+            #expect(panel.frame.maxX == screen.midX && panel.frame.maxY == screen.midY)
+
+            // Dragged mostly off the left edge, or saved on a display that's gone.
+            meeting.dismiss()
+            UserDefaults.standard.set(NSStringFromPoint(NSPoint(x: screen.minX + 5, y: -5000)), forKey: Pref.pillPosition)
+            meeting.meetingChanged("Zoom")
+            #expect(await eventually { panel.frame.minX == screen.minX && panel.frame.minY == screen.minY })
         }
     }
 }

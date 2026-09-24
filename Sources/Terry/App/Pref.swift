@@ -7,6 +7,7 @@ enum Pref {
     static let systemAudio = "captureSystemAudio"
     static let meetingPrompt = "meetingPrompt"
     static let appearance = "appearance"       // "system", "light" or "dark"
+    static let pillPosition = "pillPosition"   // top-right corner of the floating pill, once dragged
 
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [systemAudio: true, meetingPrompt: true, appearance: "system"])

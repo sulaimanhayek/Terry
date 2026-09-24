@@ -5,10 +5,11 @@ A minimal meeting transcriber for macOS. Terry uses Apple's on-device speech rec
 ## Features
 
 - **Record anytime.** Press Record in the window (⌘R) or choose Start Transcribing from the menu bar. The transcript appears live as you talk.
-- **Meetings.** A small banner offers to transcribe when Zoom, Teams, Meet, FaceTime or another app starts using the microphone. When the call ends, the transcript finishes on its own.
+- **Meetings.** A small pill floats over your apps and offers to transcribe when Zoom, Teams, Meet, FaceTime or another app starts using the microphone. While recording, it shows a timer and a stop button. Drag it anywhere and it stays there. When the call ends, the transcript finishes on its own.
 - **Both sides.** Your microphone is labelled **Me**. Other participants are **Them**, captured from your Mac's sound output. Your speakers' sound picked up by the mic is filtered out.
 - **Plain files.** Each transcript is a Markdown file in `~/Documents/Terry`. To sync, choose a folder in iCloud Drive or Google Drive in Settings. The files always stay local.
-- Light and dark appearance, lives in the menu bar, optional open at login.
+- **Menu bar.** Terry's waveform icon stays in the menu bar until you quit, with Start Transcribing, Open Terry and Settings. It becomes a record icon while recording.
+- Light and dark appearance, optional open at login.
 
 ## Requirements
 
@@ -44,7 +45,8 @@ Measured on an M3 MacBook with `make bench` and `top`. One core = 100%.
 | | CPU |
 |---|---|
 | Idle, watching for meetings | 0.0%, no wakeups |
-| Transcribing both sides of a meeting | Terry 1.8% + macOS speech service 7% |
+| Transcribing both sides of a meeting | Terry 2% + macOS speech service 7% |
+| Recording pill on screen | under 1% |
 
 ## Code layout
 
@@ -54,7 +56,7 @@ Sources/Terry/
   Audio/          microphone and system-audio capture
   Transcription/  on-device speech recognition, echo filtering
   Notes/          recording sessions, Markdown notes on disk
-  Meeting/        meeting detection and the floating banner
+  Meeting/        meeting detection and the floating pill
   Views/          window, note view, settings
 ```
 

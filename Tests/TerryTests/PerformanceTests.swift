@@ -28,7 +28,8 @@ final class RealtimeSource: AudioSource {
     func stop() { timer.cancel() }
 }
 
-/// CPU cost of transcribing a two-sided conversation in real time. Run with `make bench`.
+/// CPU cost of transcribing a two-sided conversation in real time, and of sitting idle afterwards.
+/// Run with `make bench`.
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["TERRY_BENCH"] != nil)) @MainActor
 struct PerformanceTests {
     @Test func transcribingAMeetingInRealTime() async throws {
@@ -59,8 +60,13 @@ struct PerformanceTests {
             let text = store.text(of: try #require(store.notes.first))
             #expect(text.contains("crashes") && text.contains("Wednesday"))
             let words = text.split(separator: " ").count
-            print(String(format: "bench: %.0f s of two-sided speech, CPU (one core = 100%%): Terry %.1f%%, speech service %.1f%%. %d words, saved %.1f s after stop",
-                         wall, cpu / wall * 100, daemon / wall * 100, words, (ContinuousClock.now - stopping) / .seconds(1)))
+            let saving = (ContinuousClock.now - stopping) / .seconds(1)
+
+            let idleBefore = cpuTime()
+            try await Task.sleep(for: .seconds(5))
+            let idle = (cpuTime() - idleBefore) / 5
+            print(String(format: "bench: %.0f s of two-sided speech, CPU (one core = 100%%): Terry %.1f%%, speech service %.1f%%, idle afterwards %.1f%%. %d words, saved %.1f s after stop",
+                         wall, cpu / wall * 100, daemon / wall * 100, idle * 100, words, saving))
         }
     }
 
