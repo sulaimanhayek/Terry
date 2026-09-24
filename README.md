@@ -8,7 +8,7 @@ A minimal meeting transcriber for macOS. Terry uses Apple's on-device speech rec
 - **Meetings.** A small pill floats over your apps and offers to transcribe when Zoom, Teams, Meet, FaceTime or another app starts using the microphone. While recording, it shows a timer and a stop button. Drag it anywhere and it stays there. When the call ends, the transcript finishes on its own.
 - **Both sides.** Your microphone is labelled **Me**. Other participants are **Them**, captured from your Mac's sound output. Your speakers' sound picked up by the mic is filtered out.
 - **Plain files.** Each transcript is a Markdown file in `~/Documents/Terry`. To sync, choose a folder in iCloud Drive or Google Drive in Settings. The files always stay local.
-- **Menu bar.** Terry's waveform icon stays in the menu bar until you quit, with Start Transcribing, Open Terry and Settings. It becomes a record icon while recording.
+- **Menu bar.** Terry's waveform icon stays in the menu bar until you quit, with Start Transcribing, Open Terry and Settings. It becomes a record icon while recording. On a Mac with a notch, macOS hides icons that don't fit beside it; hold ⌘ and drag icons you don't need out of the menu bar to make room.
 - Light and dark appearance, optional open at login.
 
 ## Requirements
